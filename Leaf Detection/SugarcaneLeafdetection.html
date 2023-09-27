@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sugarcane Leaf Detection </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url("/1289766-download-farm-wallpaper-1920x1200.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        #camera-feed {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        #drag-and-drop {
+            /* border: 2px dashed #ccc; */
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* #drag-and-drop:hover {
+            border-color: #333;
+        } */
+
+        #file-input {
+            display: none;
+        }
+
+        /* Style the cloud arrow icon */
+        #cloud-arrow-icon {
+            font-size: 32px;
+            color: #007BFF;
+        }
+
+        /* Style the button text */
+        #button-text {
+            font-size: 24px;
+            color: #007BFF;
+        }
+
+        /* Style the camera button */
+        #camera-button {
+            font-size: 24px;
+            color: #007BFF;
+        }
+
+        /* Style the capture button */
+        #capture-button {
+            font-size: 24px;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <video id="camera-feed" autoplay playsinline style="display: none;"></video>
+    <canvas id="captured-image" style="display: none;"></canvas>
+    <div id="drag-and-drop">
+        <button id="button-text"><i class="fas fa-cloud-upload-alt" id="cloud-arrow-icon"></i>Upload from device</button>
+        <input type="file" id="file-input" accept=".jpg, .jpeg, .png" multiple>
+    </div>
+    <div>
+        <button id="camera-button">Access Camera</button>
+        <button id="capture-button">Capture Photo</button>
+        <!-- <button id="save-button">Save Photo</button> -->
+    </div>
+    <img id="photo-element" alt="Captured Photo">
+
+    <script>
+        const cameraFeed = document.getElementById('camera-feed');
+        const capturedImage = document.getElementById('captured-image');
+        const fileInput = document.getElementById('file-input');
+        const cameraButton = document.getElementById('camera-button');
+        const captureButton = document.getElementById('capture-button');
+        const photoElement = document.getElementById('photo-element');
+        let stream;
+
+        // Store the captured photo data URL
+        let capturedPhotoDataUrl = null;
+
+        // Function to start the camera
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraFeed.srcObject = stream;
+                cameraFeed.style.display = 'block';
+                cameraButton.textContent = 'Stop Camera';
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+            }
+        }
+
+        // Function to stop the camera
+        function stopCamera() {
+            if (stream) {
+                const tracks = stream.getTracks();
+
+                tracks.forEach((track) => {
+                    track.stop();
+                });
+
+                cameraFeed.srcObject = null;
+                cameraFeed.style.display = 'none';
+                cameraButton.textContent = 'Access Camera';
+            }
+        }
+
+        // Function to capture a photo
+        async function capturePhoto() {
+            if (stream) {
+                capturedImage.width = cameraFeed.videoWidth;
+                capturedImage.height = cameraFeed.videoHeight;
+                capturedImage.getContext('2d').drawImage(cameraFeed, 0, 0);
+                capturedPhotoDataUrl = capturedImage.toDataURL('image/jpeg');
+                photoElement.src = capturedPhotoDataUrl;
+            } else {
+                alert('Access the camera first before capturing a photo.');
+            }
+        }
+
+        // Function to save the captured photo
+        function savePhoto() {
+            if (capturedPhotoDataUrl) {
+                const a = document.createElement('a');
+                a.href = capturedPhotoDataUrl;
+                a.download = 'captured_photo.jpg'; // You can set the filename here
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        cameraButton.addEventListener('click', () => {
+            if (cameraButton.textContent === 'Access Camera') {
+                startCamera();
+            } else {
+                stopCamera();
+            }
+        });
+
+        captureButton.addEventListener('click', capturePhoto);
+        // saveButton.addEventListener('click', savePhoto);
+
+        // Function to access the device's camera
+        function accessCamera() {
+            navigator.mediaDevices
+                .getUserMedia({ video: true })
+                .then((stream) => {
+                    // Successfully accessed the camera, you can use the stream as needed
+                    console.log('Camera access successful');
+                    cameraFeed.srcObject = stream;
+                    cameraFeed.style.display = 'block';
+                    cameraButton.textContent = 'Stop Camera';
+                })
+                .catch((error) => {
+                    console.error('Error accessing camera:', error);
+                });
+        }
+
+        // Add click event listener to the button text
+        const buttonText = document.getElementById('button-text');
+        buttonText.addEventListener('click', () => {
+            // Trigger the file input when the button text is clicked
+            fileInput.click();
+        });
+    </script>
+</body>
+</html>
